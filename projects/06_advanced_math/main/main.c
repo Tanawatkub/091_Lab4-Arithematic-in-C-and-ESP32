@@ -129,6 +129,44 @@ void calculate_triangle_bonus(void) {
     ESP_LOGI(TAG, "╚═══════════════════════════════════════╝");
 }
 
+// 🧮 ฟังก์ชันคำนวณพื้นที่สามเหลี่ยมทั่วไป
+void calculate_triangle_area(double base, double height) {
+    double area = 0.5 * base * height;
+
+    ESP_LOGI(TAG, "\n📐 พื้นที่สามเหลี่ยมทั่วไป");
+    ESP_LOGI(TAG, "╔════════════════════════════════════╗");
+    ESP_LOGI(TAG, "║ ฐาน: %.2f เมตร", base);
+    ESP_LOGI(TAG, "║ สูง: %.2f เมตร", height);
+    ESP_LOGI(TAG, "║ พื้นที่: ½×%.2f×%.2f = %.2f ตร.ม.", base, height, area);
+    ESP_LOGI(TAG, "╚════════════════════════════════════╝");
+}
+
+// 🔺 ฟังก์ชันคำนวณปริมาตรทรงกรวย
+void calculate_cone_volume(double radius, double height) {
+    double volume = (1.0 / 3.0) * PI * radius * radius * height;
+
+    ESP_LOGI(TAG, "\n🔺 ปริมาตรทรงกรวย");
+    ESP_LOGI(TAG, "╔════════════════════════════════════╗");
+    ESP_LOGI(TAG, "║ รัศมี: %.2f เมตร", radius);
+    ESP_LOGI(TAG, "║ สูง: %.2f เมตร", height);
+    ESP_LOGI(TAG, "║ ปริมาตร: (⅓)π×%.2f²×%.2f = %.2f ลบ.ม.", radius, height, volume);
+    ESP_LOGI(TAG, "╚════════════════════════════════════╝");
+}
+
+// 🔄 ฟังก์ชันแปลงหน่วยพื้นที่
+void convert_area_units(double meters) {
+    double square_meters = meters * meters;
+    double rai = square_meters / SQUARE_METERS_TO_RAI;
+
+    ESP_LOGI(TAG, "\n🔄 การแปลงหน่วยพื้นที่");
+    ESP_LOGI(TAG, "╔════════════════════════════════════╗");
+    ESP_LOGI(TAG, "║ เมตร: %.2f เมตร", meters);
+    ESP_LOGI(TAG, "║ ตร.เมตร: %.2f ตร.ม.", square_meters);
+    ESP_LOGI(TAG, "║ เท่ากับ: %.4f ไร่", rai);
+    ESP_LOGI(TAG, "╚════════════════════════════════════╝");
+}
+
+
 void app_main(void) {
     ESP_LOGI(TAG, "🚀 เริ่มต้นโปรแกรมคณิตศาสตร์ขั้นสูง!");
     ESP_LOGI(TAG, "📐 การคำนวณพื้นที่และปริมาตร\n");
@@ -187,6 +225,16 @@ void app_main(void) {
     
     // โบนัสท้าทาย
     calculate_triangle_bonus();
+
+        // ✅ ทดลองฟังก์ชันเพิ่มเติม
+    calculate_triangle_area(12.0, 6.0);
+    vTaskDelay(pdMS_TO_TICKS(2000));
+
+    calculate_cone_volume(3.0, 5.0);
+    vTaskDelay(pdMS_TO_TICKS(2000));
+
+    convert_area_units(40.0);  // สมมติว่าวัดความยาวด้านของพื้นที่สี่เหลี่ยม
+
     
     ESP_LOGI(TAG, "\n✅ เสร็จสิ้นการคำนวณทั้งหมด!");
     ESP_LOGI(TAG, "🎓 ได้เรียนรู้: คณิตศาสตร์ขั้นสูง, struct, #define, และฟังก์ชันคณิตศาสตร์");

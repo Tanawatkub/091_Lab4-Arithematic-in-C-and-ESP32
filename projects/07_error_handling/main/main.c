@@ -19,14 +19,19 @@ typedef enum {
     ERROR_OUT_OF_RANGE,       // ข้อมูลเกินขอบเขต
     ERROR_NEGATIVE_VALUE,     // ค่าติดลบไม่เหมาะสม
     ERROR_OVERFLOW,           // ข้อมูลล้น
-    ERROR_UNDERFLOW           // ข้อมูลต่ำเกินไป
+    ERROR_UNDERFLOW,           // ข้อมูลต่ำเกินไป
+    ERROR_INVALID_EMAIL,        // อีเมลไม่ถูกต้อง
+    ERROR_INVALID_PHONE,        // เบอร์โทรศัพท์ไม่ถูกต้อง
+    ERROR_INVALID_IDCARD,       // บัตรประชาชนไม่ถูกต้อง
+    ERROR_RETRY_LIMIT_EXCEEDED  // เกินจำนวนครั้งที่อนุญาต
+
 } error_code_t;
 
 // 📊 โครงสร้างผลลัพธ์
 typedef struct {
     double result;
     error_code_t error;
-    char message[100];
+    char message[128];
 } calculation_result_t;
 
 // 🎨 ฟังก์ชันแสดง ASCII Art ตามสถานการณ์
@@ -234,6 +239,96 @@ calculation_result_t calculate_interest(double principal, double rate, int years
     return result;
 }
 
+
+calculation_result_t validate_email(const char* email) {
+    calculation_result_t result = {0};
+    if (email == NULL || strlen(email) == 0 || strchr(email, '@') == NULL || strchr(email, '.') == NULL) {
+        result.error = ERROR_INVALID_EMAIL;
+        strcpy(result.message, "❌ อีเมลไม่ถูกต้อง (ต้องมี '@' และ '.' )");
+        ESP_LOGE(TAG, "%s", result.message);
+        return result;
+    }
+    result.error = ERROR_NONE;
+    sprintf(result.message, "✅ อีเมลถูกต้อง: %s", email);
+    ESP_LOGI(TAG, "%s", result.message);
+    return result;
+}
+
+
+calculation_result_t validate_phone(const char* phone) {
+    calculation_result_t result = {0};
+    if (phone == NULL || strlen(phone) != 10) {
+        result.error = ERROR_INVALID_PHONE;
+        strcpy(result.message, "❌ เบอร์โทรศัพท์ต้องมี 10 หลัก");
+        ESP_LOGE(TAG, "%s", result.message);
+        return result;
+    }
+    for (int i = 0; i < 10; i++) {
+        if (phone[i] < '0' || phone[i] > '9') {
+            result.error = ERROR_INVALID_PHONE;
+            strcpy(result.message, "❌ เบอร์โทรศัพท์ต้องเป็นตัวเลขทั้งหมด");
+            ESP_LOGE(TAG, "%s", result.message);
+            return result;
+        }
+    }
+    result.error = ERROR_NONE;
+    sprintf(result.message, "✅ เบอร์โทร: %s", phone);
+    ESP_LOGI(TAG, "%s", result.message);
+    return result;
+}
+
+
+calculation_result_t validate_thai_id(const char* id) {
+    calculation_result_t result = {0};
+    if (strlen(id) != 13) {
+        result.error = ERROR_INVALID_IDCARD;
+        strcpy(result.message, "❌ เลขบัตรประชาชนต้องมี 13 หลัก");
+        ESP_LOGE(TAG, "%s", result.message);
+        return result;
+    }
+
+    int sum = 0;
+    for (int i = 0; i < 12; i++) {
+        if (id[i] < '0' || id[i] > '9') {
+            result.error = ERROR_INVALID_IDCARD;
+            strcpy(result.message, "❌ ต้องเป็นตัวเลขเท่านั้น");
+            ESP_LOGE(TAG, "%s", result.message);
+            return result;
+        }
+        sum += (id[i] - '0') * (13 - i);
+    }
+
+    int check = (11 - (sum % 11)) % 10;
+    if (check != (id[12] - '0')) {
+        result.error = ERROR_INVALID_IDCARD;
+        strcpy(result.message, "❌ เลขบัตรประชาชนไม่ถูกต้อง");
+        ESP_LOGE(TAG, "%s", result.message);
+        return result;
+    }
+
+    result.error = ERROR_NONE;
+    sprintf(result.message, "✅ บัตรประชาชนถูกต้อง: %s", id);
+    ESP_LOGI(TAG, "%s", result.message);
+    return result;
+}
+
+
+calculation_result_t retry_wrapper(calculation_result_t (*func)(const char*), const char* input, int max_retries) {
+    calculation_result_t result;
+    for (int i = 0; i < max_retries; i++) {
+        result = func(input);
+        if (result.error == ERROR_NONE) {
+            return result;
+        }
+        ESP_LOGW(TAG, "🔁 ลองใหม่ครั้งที่ %d/%d", i + 1, max_retries);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+    result.error = ERROR_RETRY_LIMIT_EXCEEDED;
+    strcpy(result.message, "❌ ลองใหม่เกินจำนวนครั้งที่กำหนด");
+    ESP_LOGE(TAG, "%s", result.message);
+    return result;
+}
+
 // 🍕 ฟังก์ชันจำลองสถานการณ์ร้านพิซซ่า
 void pizza_shop_scenario(void) {
     ESP_LOGI(TAG, "\n🍕 === สถานการณ์ร้านพิซซ่า ===");
@@ -342,4 +437,12 @@ void app_main(void) {
     ESP_LOGI(TAG, "\n✅ เสร็จสิ้นการเรียนรู้การจัดการข้อผิดพลาด!");
     ESP_LOGI(TAG, "🎓 ได้เรียนรู้: enum, struct, error codes, และการตรวจสอบข้อมูล");
     ESP_LOGI(TAG, "🏆 ตอนนี้คุณสามารถเขียนโค้ดที่ปลอดภัยและน่าเชื่อถือแล้ว!");
+    ESP_LOGI(TAG, "\n📬 === ตรวจสอบข้อมูลส่วนตัว ===");
+    retry_wrapper(validate_email, "invalid_email", 3);
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    validate_email("user@example.com");
+
+    validate_phone("0801234567");
+    validate_thai_id("1101700230701");  // ตัวอย่างเลขบัตรถูกต้อง
+
 }

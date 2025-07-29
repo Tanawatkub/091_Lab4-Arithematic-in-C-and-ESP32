@@ -11,10 +11,22 @@ void app_main(void)
     ESP_LOGI(TAG, "====================================");
     
     // ประกาศตัวแปรเก็บจำนวนลูกอม
-    int number_of_bags = 5;        // จำนวนถุง
-    int candies_per_bag = 6;       // ลูกอมต่อถุง
+    int number_of_bags = 7;        // จำนวนถุง
+    int candies_per_bag = 8;       // ลูกอมต่อถุง
     int total_candies;             // ลูกอมทั้งหมด
-    
+    int strawberry_bags = 3;    // ถุงรสสตรอเบอร์รี่
+int orange_bags = 2;        // ถุงรสส้ม
+int grape_bags = 4;         // ถุงรสองุ่น
+
+int total_bags = strawberry_bags + orange_bags + grape_bags;
+
+
+ESP_LOGI(TAG, "🍓 สตรอเบอร์รี่: %d ถุง = %d เม็ด", 
+         strawberry_bags, strawberry_bags * candies_per_bag);
+ESP_LOGI(TAG, "🍊 รสส้ม: %d ถุง = %d เม็ด", 
+         orange_bags, orange_bags * candies_per_bag);
+ESP_LOGI(TAG, "🍇 รสองุ่น: %d ถุง = %d เม็ด", 
+         grape_bags, grape_bags * candies_per_bag);
     // แสดงข้อมูลเริ่มต้น
     ESP_LOGI(TAG, "📖 โจทย์:");
     ESP_LOGI(TAG, "   มีถุงลูกอม: %d ถุง", number_of_bags);
@@ -54,7 +66,7 @@ void app_main(void)
     ESP_LOGI(TAG, "   การคูณ: %d × %d = %d", number_of_bags, candies_per_bag, total_candies);
     
     // แสดงการบวกซ้ำๆ
-    ESP_LOGI(TAG, "   การบวกซ้ำๆ: ", );
+    ESP_LOGI(TAG, "   การบวกซ้ำๆ: " );
     int sum_check = 0;
     for (int i = 1; i <= number_of_bags; i++) {
         sum_check += candies_per_bag;
@@ -126,5 +138,18 @@ void app_main(void)
     ESP_LOGI(TAG, "🎉 จบโปรแกรมนับลูกอมในถุง!");
     ESP_LOGI(TAG, "📖 อ่านต่อในโปรเจคถัดไป: 04_division_cookies");
     
+
+    ESP_LOGI(TAG, "📊 ตารางสูตรคูณของ %d:", candies_per_bag);
+for (int i = 1; i <= 10; i++) {
+    ESP_LOGI(TAG, "   %d x %d = %d", i, candies_per_bag, i * candies_per_bag);
+}
+
+int friends = 12;           // จำนวนเพื่อน
+int candies_per_friend = total_candies / friends;  // ลูกอมต่อคน
+int remaining_candies = total_candies % friends;   // ลูกอมที่เหลือ
+
+ESP_LOGI(TAG, "👥 แจกให้เพื่อน %d คน:", friends);
+ESP_LOGI(TAG, "   คนละ %d เม็ด", candies_per_friend);
+ESP_LOGI(TAG, "   เหลือ %d เม็ด", remaining_candies);
     vTaskDelay(2000 / portTICK_PERIOD_MS);
 }
